@@ -1,0 +1,24 @@
+{
+  "name": "node-api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "formidable": "^3.5.2",
+    "geoip-country": "^5.0.202502142341",
+    "ip-country": "^1.0.2",
+    "ip-location-api": "^2.3.2",
+    "next": "15.1.7",
+    "node-fetch": "^3.3.2",
+    "puppeteer": "^24.3.0",
+    "puppeteer-core": "^24.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
