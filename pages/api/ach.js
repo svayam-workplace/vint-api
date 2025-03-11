@@ -73,15 +73,17 @@ async function requestHandler(req, res, type) {
 			return res.status(200).json({ response: 'error', message: 'form_request_invalid' });
 		}
 		else {
-			var { user_id, channel, remarks, amount, aff_user_id } = fields;
+			var { user_id, channel, remarks, amount, aff_user_id, activity_id, c_username } = fields;
 			var request_id = REQUEST_ID;
-			// Required;
-			var user_id = user_id[0];
-			var channel = channel[0];
 
+			var user_id = (user_id && user_id[0]) || false;
+			var channel = (channel && channel[0]) || false;
+			var activity_id = (activity_id && activity_id[0]) || false;
+			var username = (c_username && c_username[0]) || false;
 			var aff_user_id = (aff_user_id && aff_user_id[0]) || false
 			var remarks = (remarks && remarks[0]) || false;
 			var amount = (amount && amount[0]) || false;
+
 			var newRequest = {
 				request_id,
 				type,
@@ -90,6 +92,8 @@ async function requestHandler(req, res, type) {
 				aff_user_id,
 				remarks,
 				amount,
+				activity_id,
+				username
 			}
 			requests.push(newRequest);
 			setTimeout(async () => {
@@ -111,11 +115,16 @@ async function requestEngine() {
 		var item = requests[0];
 		var { type } = item;
 		if (type == 'create') {
+			console.log('STARTED_HANDLING_CREATE_REQUEST');
 			createNewUser(item);
 		}
-		else {
-			engineOn = false;
-			console.log('ENGINE OFF, REQUEST NOT MY TYPE');
+		else if (type == 'deposit') {
+			console.log('STARTED_HANDLING_DEPOSIT_REQUEST');
+			deposit(item);
+		}
+		else if (type == "withdraw") {
+			console.log('STARTED_HANDLING_WITHDRAW_REQUEST');
+			withdraw(item);
 		}
 	}
 	else {
@@ -150,8 +159,6 @@ async function createNewUser(item) {
 
 			// PHP API
 			var formData = new FormData();
-			// formData.append('user_id', user_id);
-			// formData.append('channel', '48');
 			formData.append('username', client_username);
 			formData.append('password', client_password);
 			formData.append('status', '1');
@@ -190,6 +197,114 @@ async function createNewUser(item) {
 	}
 }
 
+async function deposit(item) {
+	var { request_id, amount, activity_id, username } = item;
+	if (request_id && amount && activity_id && username) {
+		if (amount) {
+			try {
+				const newPage = await browser.newPage();
+				await newPage.goto('https://allpanelexch.com/admin/users', { waitUntil: 'networkidle2' });
+				await newPage.type('input[name="searchuser"]', username);
+				await newPage.click('button.btn-primary');
+				await new Promise(resolve => setTimeout(resolve, 500));
+				await newPage.evaluate(() => {
+					const button = document.querySelector('#eventsListTbl tbody tr:nth-of-type(2) .btn-group button:nth-of-type(1)');
+					button.click();
+				});
+
+				await newPage.waitForSelector('input[name="userDipositeamount"]', { timeout: 15000 });
+				await newPage.type('input[name="userDipositeamount"]', amount);
+				await newPage.type('textarea[name="userDipositeremark"]', 'GB');
+				await newPage.type('input[name="userDipositempassword"]', T_PASS);
+				await newPage.keyboard.press('Enter');
+				await newPage.waitForSelector('#swal2-content', { timeout: 15000 });
+				const content = await newPage.evaluate(() => {
+					return document.querySelector('#swal2-content')?.innerHTML || "Not Found";
+				});
+
+				if (content == "Sucessfull Balance Transfer") {
+					updateTransaction(activity_id, request_id, newPage);
+				}
+			} catch (error) {
+				console.log('1 REQUEST FAILED', request_id);
+				requests = requests.filter(req => req.request_id !== request_id);
+				requestEngine();
+				console.log(error);
+			}
+		}
+	}
+}
+
+async function withdraw(item) {
+	var { request_id, amount, activity_id, username } = item;
+	if (request_id && amount && activity_id && username) {
+		if (amount) {
+			try {
+				const newPage = await browser.newPage();
+				await newPage.goto('https://allpanelexch.com/admin/users', { waitUntil: 'networkidle2' });
+				await newPage.type('input[name="searchuser"]', username);
+				await newPage.click('button.btn-primary');
+				await newPage.evaluate(() => {
+					const button = document.querySelector('#eventsListTbl tbody tr:nth-of-type(2) .btn-group button:nth-of-type(2)');
+					button.click();
+				});
+
+				await newPage.waitForSelector('input[name="userWithdrawFrmamount"]', { timeout: 12000 });
+				await newPage.type('input[name="userWithdrawFrmamount"]', amount);
+				await newPage.type('textarea[name="userWithdrawFrmremark"]', 'GB');
+				await newPage.type('input[name="userWithdrawFrmmpassword"]', T_PASS);
+				await newPage.keyboard.press('Enter');
+				await newPage.waitForSelector('#swal2-content', { timeout: 15000 });
+				const content = await newPage.evaluate(() => {
+					return document.querySelector('#swal2-content')?.innerHTML || "Not Found";
+				});
+
+				if (content == "Sucessfull Balance Transfer") {
+					updateTransaction(activity_id, request_id, newPage);
+				}
+			} catch (error) {
+				console.log('1 REQUEST FAILED', request_id);
+				requests = requests.filter(req => req.request_id !== request_id);
+				requestEngine();
+				console.log(error);
+			}
+		}
+	}
+}
+
+async function updateTransaction(activity_id, request_id, newPage) {
+	var formData = new FormData();
+	formData.append('activity_id', activity_id);
+	formData.append('status', '1');
+	formData.append('note', 'GB');
+
+	await fetch(`https://api.sinc.network/up_trans_request?id=${activity_id}`, {
+		method: "POST",
+		headers: {
+			"Authorization": 1,
+		},
+		body: formData,
+	}).then((result) => {
+		result.json().then(
+			async (resp) => {
+				if (resp.response == "ok") {
+					console.log('1 REQUEST PROCESSED', request_id);
+					requests = requests.filter(req => req.request_id !== request_id);
+					await newPage.close();
+					console.log('Restarting Engine');
+					requestEngine();
+				}
+				else {
+					console.log('1 REQUEST FAILED', request_id);
+					requests = requests.filter(req => req.request_id !== request_id);
+					requestEngine();
+					console.log(error);
+				}
+			}
+		)
+	});
+}
+
 export default async function handler(req, res) {
 	await runMiddleware(req, res, cors);
 	if (req.method == "POST") {
@@ -197,23 +312,28 @@ export default async function handler(req, res) {
 		REQUEST_ID++
 		if (type && ["create", "deposit", "withdraw"].includes(type)) {
 			try {
+
 				if (!testflight) {
+					console.log('1_NEW_REQUEST_TYPE', type);
+					
 					const page = await launchBrowser();
 					var currentUrl = page.url();
 					console.log("currentUrl", currentUrl);
+
 					if (currentUrl === "https://allpanelexch.com/admin") {
+						console.log('AT_LOGIN_PAGE');
+						
 						await page.type('#input-1', PANEL_USERNAME);
 						await page.type('#input-2', PANEL_PASSWORD);
 						await page.click('.btn-submit');
-						console.log('LOGGING_IN...')
+						console.log('PROCESSING_LOGIN...');
 						await page.waitForNavigation({ waitUntil: 'networkidle2' });
+						
 						var newUrl = page.url();
 						if (newUrl !== "https://allpanelexch.com/admin") {
-							if (!engine) {
-								engine = true;
-								console.log('ENGINE_STARTED...');
-								await requestHandler(req, res, type);
-							}
+							console.log('LOGGEDIN_SUCCESSFULLY');
+							console.log('ENGINE_STATUS', engine);
+							await requestHandler(req, res, type);
 						}
 						else {
 							res.status(200).json({
@@ -223,20 +343,21 @@ export default async function handler(req, res) {
 						}
 					}
 					else {
+						console.log('BYPASS_LOGIN');
 						await requestHandler(req, res, type);
 					}
 				}
 				else {
 					res.status(200).json({
 						response: 'ok',
-						mode : 'test',
+						mode: 'test',
 						requests,
 					});
 				}
 			}
 			catch (error) {
 				console.log(error);
-				res.status(200).json({ response: 'error', message: "CATCH" });
+				res.status(200).json({ response: 'error', message: "CATCH", error: error });
 			}
 		}
 		else {
