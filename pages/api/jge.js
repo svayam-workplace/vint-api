@@ -3,9 +3,9 @@ import formidable from 'formidable';
 import Cors from 'cors';
 import fetch from 'node-fetch';
 
-const PANEL_USERNAME = '2middlesex9999';
+const PANEL_USERNAME = '2mexico8888';
 const PANEL_PASSWORD = 'Mnbv1234';
-const T_PASS = '336302';
+const T_PASS = '222500';
 
 async function generate_random_string(length) {
 	let result = '';
@@ -51,17 +51,17 @@ var engineOn = false;
 
 async function launchBrowser() {
 	if (!browser) {
-		browser = await puppeteer.launch({ headless: true });
+		browser = await puppeteer.launch({ headless: false });
 		page = await browser.newPage();
 		await page.setViewport({ width: 1080, height: 1024 });
-		await page.goto('https://allpanelexch.com/admin');
+		await page.goto('https://jsbexchange.com/admin');
 		await new Promise(resolve => setTimeout(resolve, 1000));
 	}
 
 	if (!page) {
 		page = await browser.newPage();
 		await page.setViewport({ width: 1080, height: 1024 });
-		await page.goto('https://allpanelexch.com/admin');
+		await page.goto('https://jsbexchange.com/admin');
 	}
 	return page;
 }
@@ -141,7 +141,7 @@ async function createNewUser(item) {
 	if (aff_user_id) {
 		try {
 			const newPage = await browser.newPage();
-			await newPage.goto('https://allpanelexch.com/admin/users', { waitUntil: 'networkidle2' });
+			await newPage.goto('https://jsbexchange.com/admin/users', { waitUntil: 'networkidle2' });
 			await newPage.waitForSelector('a.btn.btn-primary[href="/admin/users/insertuser"]');
 			await newPage.click('a.btn.btn-primary[href="/admin/users/insertuser"]');
 			await newPage.type('input[name="clientname"]', client_username);
@@ -203,7 +203,7 @@ async function deposit(item) {
 		if (amount) {
 			try {
 				const newPage = await browser.newPage();
-				await newPage.goto('https://allpanelexch.com/admin/users', { waitUntil: 'networkidle2' });
+				await newPage.goto('https://jsbexchange.com/admin/users', { waitUntil: 'networkidle2' });
 				await newPage.type('input[name="searchuser"]', username);
 				await newPage.click('button.btn-primary');
 				await new Promise(resolve => setTimeout(resolve, 500));
@@ -217,13 +217,19 @@ async function deposit(item) {
 				await newPage.type('textarea[name="userDipositeremark"]', 'GB');
 				await newPage.type('input[name="userDipositempassword"]', T_PASS);
 				await newPage.keyboard.press('Enter');
-				await newPage.waitForSelector('#swal2-content', { timeout: 15000 });
+				await newPage.waitForSelector('#swal2-content', { timeout: 5000 });
 				const content = await newPage.evaluate(() => {
 					return document.querySelector('#swal2-content')?.innerHTML || "Not Found";
 				});
 
 				if (content == "Sucessfull Balance Transfer") {
 					updateTransaction(activity_id, request_id, newPage);
+				}
+				else {
+					console.log('1 REQUEST FAILED', request_id);
+					requests = requests.filter(req => req.request_id !== request_id);
+					requestEngine();
+					console.log(error);
 				}
 			} catch (error) {
 				console.log('1 REQUEST FAILED', request_id);
@@ -241,7 +247,7 @@ async function withdraw(item) {
 		if (amount) {
 			try {
 				const newPage = await browser.newPage();
-				await newPage.goto('https://allpanelexch.com/admin/users', { waitUntil: 'networkidle2' });
+				await newPage.goto('https://jsbexchange.com/admin/users', { waitUntil: 'networkidle2' });
 				await newPage.type('input[name="searchuser"]', username);
 				await newPage.click('button.btn-primary');
 				await newPage.evaluate(() => {
@@ -254,6 +260,7 @@ async function withdraw(item) {
 				await newPage.type('textarea[name="userWithdrawFrmremark"]', 'GB');
 				await newPage.type('input[name="userWithdrawFrmmpassword"]', T_PASS);
 				await newPage.keyboard.press('Enter');
+				console.log('WAITING_FOR_CONCLUSION');
 				await newPage.waitForSelector('#swal2-content', { timeout: 15000 });
 				const content = await newPage.evaluate(() => {
 					return document.querySelector('#swal2-content')?.innerHTML || "Not Found";
@@ -261,6 +268,11 @@ async function withdraw(item) {
 
 				if (content == "Sucessfull Balance Transfer") {
 					updateTransaction(activity_id, request_id, newPage);
+				}
+				else {
+					console.log('1 REQUEST FAILED', request_id);
+					requests = requests.filter(req => req.request_id !== request_id);
+					requestEngine();
 				}
 			} catch (error) {
 				console.log('1 REQUEST FAILED', request_id);
@@ -315,22 +327,22 @@ export default async function handler(req, res) {
 
 				if (!testflight) {
 					console.log('1_NEW_REQUEST_TYPE', type);
-					
+
 					const page = await launchBrowser();
 					var currentUrl = page.url();
 					console.log("currentUrl", currentUrl);
 
-					if (currentUrl === "https://allpanelexch.com/admin") {
+					if (currentUrl === "https://jsbexchange.com/admin") {
 						console.log('AT_LOGIN_PAGE');
-						
+
 						await page.type('#input-1', PANEL_USERNAME);
 						await page.type('#input-2', PANEL_PASSWORD);
 						await page.click('.btn-submit');
 						console.log('PROCESSING_LOGIN...');
 						await page.waitForNavigation({ waitUntil: 'networkidle2' });
-						
+
 						var newUrl = page.url();
-						if (newUrl !== "https://allpanelexch.com/admin") {
+						if (newUrl !== "https://jsbexchange.com/admin") {
 							console.log('LOGGEDIN_SUCCESSFULLY');
 							console.log('ENGINE_STATUS', engine);
 							await requestHandler(req, res, type);

@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
+  env:{
+    MAIN_URL : "https://api.sinc.network",
+  }
 };
 
 export default nextConfig;
