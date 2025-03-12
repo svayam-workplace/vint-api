@@ -154,7 +154,7 @@ async function createNewUser(item) {
 			await newPage.type('input[name="password_confirmation"]', client_password);
 			await new Promise(resolve => setTimeout(resolve, 100));
 			await newPage.keyboard.press('Enter');
-			await new Promise(resolve => setTimeout(resolve, 1500));
+			await newPage.waitForSelector('.card.green.error-message', { timeout: 15000 });
 			const successMessage = await newPage.evaluate(() => {
 				const card = document.querySelector('.card.green.error-message');
 				if (card) {
