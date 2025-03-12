@@ -6,7 +6,7 @@ class Index extends PureComponent {
 
   render() {
     return (
-      <>Gillette Engine ⚡️ </>
+      <>Gillette Engine ⚡️</>
     )
   }
 }
