@@ -52,11 +52,7 @@ var engineOn = false;
 
 async function launchBrowser() {
 	if (!browser) {
-		browser = await puppeteer.launch({
-			headless: false,
-			args: ['--start-fullscreen']
-
-		});
+		browser = await puppeteer.launch({ headless: true });
 		page = await browser.newPage();
 		await page.setViewport({ width: 1080, height: 1024 });
 		await page.goto(`${URL}/login`);
