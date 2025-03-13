@@ -51,7 +51,7 @@ var engineOn = false;
 
 async function launchBrowser() {
 	if (!browser) {
-		browser = await puppeteer.launch({ headless: true });
+		browser = await puppeteer.launch({ headless: process.env.HEADLESS });
 		page = await browser.newPage();
 		await page.setViewport({ width: 1080, height: 1024 });
 		await page.goto('https://allpanelexch.com/admin');
@@ -319,16 +319,13 @@ export default async function handler(req, res) {
 					const page = await launchBrowser();
 					var currentUrl = page.url();
 					console.log("currentUrl", currentUrl);
-
 					if (currentUrl === "https://allpanelexch.com/admin") {
 						console.log('AT_LOGIN_PAGE');
-						
 						await page.type('#input-1', PANEL_USERNAME);
 						await page.type('#input-2', PANEL_PASSWORD);
 						await page.click('.btn-submit');
 						console.log('PROCESSING_LOGIN...');
 						await page.waitForNavigation({ waitUntil: 'networkidle2' });
-						
 						var newUrl = page.url();
 						if (newUrl !== "https://allpanelexch.com/admin") {
 							console.log('LOGGEDIN_SUCCESSFULLY');

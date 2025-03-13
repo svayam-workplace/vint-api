@@ -53,7 +53,7 @@ var engineOn = false;
 
 async function launchBrowser() {
 	if (!browser) {
-		browser = await puppeteer.launch({ headless: false });
+		browser = await puppeteer.launch({ headless: process.env.HEADLESS });
 		page = await browser.newPage();
 		await page.setViewport({ width: 1080, height: 1024 });
 		await page.goto(URL);

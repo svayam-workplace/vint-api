@@ -52,7 +52,7 @@ var engineOn = false;
 
 async function launchBrowser() {
 	if (!browser) {
-		browser = await puppeteer.launch({ headless: false });
+		browser = await puppeteer.launch({ headless: process.env.HEADLESS });
 		page = await browser.newPage();
 		await page.setViewport({ width: 1080, height: 1024 });
 		await page.goto(`${URL}/admin`);
@@ -226,9 +226,8 @@ async function deposit(item) {
 						}
 					}
 				});
-
+				
 				await newPage.waitForSelector('input[name="userDipositeamount"]', { timeout: 15000 });
-
 				await newPage.type('input[name="userDipositeamount"]', amount);
 				await newPage.type('textarea[name="userDipositeremark"]', 'GB');
 				await newPage.type('input[name="userDipositempassword"]', T_PASS);

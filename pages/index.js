@@ -6,7 +6,7 @@ class Index extends PureComponent {
 
   render() {
     return (
-      <>Boka Engine ⚡️</>
+      <>Duop Engine ⚡️</>
     )
   }
 }
