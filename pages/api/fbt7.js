@@ -217,28 +217,30 @@ async function deposit(item) {
 				await newPage.type('input[name="searchKey"]', username);
 				await newPage.keyboard.press('Enter');
 
-				await newPage.evaluate(() => {
-					const buttons = document.querySelectorAll("button");
-					for (let button of buttons) {
-						if (button.textContent.trim() === "D") {
-							button.click();
-							break;
-						}
-					}
-				});
-				
-				await newPage.waitForSelector('input[name="userDipositeamount"]', { timeout: 15000 });
-				await newPage.type('input[name="userDipositeamount"]', amount);
-				await newPage.type('textarea[name="userDipositeremark"]', 'GB');
-				await newPage.type('input[name="userDipositempassword"]', T_PASS);
+				await new Promise(resolve => setTimeout(resolve, 1200));
+				await newPage.waitForSelector('.text-warning', { timeout: 10000 });
+				await newPage.click(`.text-warning`);
+				await new Promise(resolve => setTimeout(resolve, 800));
+
+				await newPage.waitForSelector('input[name="userCreditUpdateamount"]', { timeout: 15000 });
+
+				await newPage.type('input[name="userCreditUpdateamount"]', amount);
+				await newPage.type('textarea[name="userCreditUpdateremark"]', 'GB');
+				await newPage.type('input[name="userCreditUpdatempassword"]', T_PASS);
 				await newPage.keyboard.press('Enter');
 
-				updateTransaction(activity_id, request_id, newPage);
-				// else {
-				// 	console.log('❌ 1 REQUEST FAILED', activity_id);
-				// 	requests = requests.filter(req => req.request_id !== request_id);
-				// 	requestEngine();
-				// }
+				await newPage.waitForSelector('#swal2-content', { timeout: 15000 });
+				const content = await newPage.evaluate(() => {
+					return document.querySelector('#swal2-content')?.innerHTML || "Not Found";
+				});
+
+				if (content == "Sucessfull Balance Transfer") {
+					updateTransaction(activity_id, request_id, newPage);
+				} else {
+					console.log('❌ 1 REQUEST FAILED', activity_id);
+					requests = requests.filter(req => req.request_id !== request_id);
+					requestEngine();
+				}
 			} catch (error) {
 				console.log('❌ 1 REQUEST FAILED', activity_id);
 				requests = requests.filter(req => req.request_id !== request_id);
@@ -260,28 +262,34 @@ async function withdraw(item) {
 				await newPage.type('input[name="searchKey"]', username);
 				await newPage.keyboard.press('Enter');
 
-				await newPage.evaluate(() => {
-					const buttons = document.querySelectorAll("button");
-					for (let button of buttons) {
-						if (button.textContent.trim() === "W") {
-							button.click();
-							break;
-						}
-					}
-				});
-				await newPage.waitForSelector('input[name="userWithdrawFrmamount"]', { timeout: 15000 });
+				await new Promise(resolve => setTimeout(resolve, 1200));
+				await newPage.waitForSelector('.text-warning', { timeout: 10000 });
+				await newPage.click(`.text-warning`);
+				await new Promise(resolve => setTimeout(resolve, 800));
 
-				await newPage.type('input[name="userWithdrawFrmamount"]', amount);
-				await newPage.type('textarea[name="userWithdrawFrmremark"]', 'GB');
-				await newPage.type('input[name="userWithdrawFrmmpassword"]', T_PASS);
+				await newPage.waitForSelector('ul.nav-tabs', { visible: true, timeout: 5000 });
+				await newPage.click(`ul.nav-tabs li:nth-child(2) a`);
+
+				await newPage.waitForSelector('input[name="userWithdrawCreditUpdateamount"]', { timeout: 15000 });
+
+				await newPage.type('input[name="userWithdrawCreditUpdateamount"]', amount);
+				await newPage.type('textarea[name="userWithdrawCreditUpdateremark"]', 'GB');
+				await newPage.type('input[name="userWithdrawCreditUpdatempassword"]', T_PASS);
 				await newPage.keyboard.press('Enter');
 
-				updateTransaction(activity_id, request_id, newPage);
-				// else {
-				// 	console.log('❌ 1 REQUEST FAILED', activity_id);
-				// 	requests = requests.filter(req => req.request_id !== request_id);
-				// 	requestEngine();
-				// }
+
+				await newPage.waitForSelector('#swal2-content', { timeout: 15000 });
+				const content = await newPage.evaluate(() => {
+					return document.querySelector('#swal2-content')?.innerHTML || "Not Found";
+				});
+
+				if (content == "Sucessfull Balance Transfer") {
+					updateTransaction(activity_id, request_id, newPage);
+				} else {
+					console.log('❌ 1 REQUEST FAILED', activity_id);
+					requests = requests.filter(req => req.request_id !== request_id);
+					requestEngine();
+				}
 			} catch (error) {
 				console.log('❌ 1 REQUEST FAILED', activity_id);
 				requests = requests.filter(req => req.request_id !== request_id);
