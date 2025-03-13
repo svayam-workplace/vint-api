@@ -333,13 +333,13 @@ export default async function handler(req, res) {
 
 					if (currentUrl === "https://diamondexch99.com/admin") {
 						console.log('AT_LOGIN_PAGE');
-
+						await page.waitForSelector('#input-1');
 						await page.type('#input-1', PANEL_USERNAME);
 						await page.type('#input-2', PANEL_PASSWORD);
-						await page.click('.btn-submit');
+						await page.keyboard.press('Enter');
 						console.log('PROCESSING_LOGIN...');
 						await page.waitForNavigation({ waitUntil: 'networkidle2' });
-
+						console.log('LOGIN REQUEST DONE');
 						var newUrl = page.url();
 						if (newUrl !== "https://diamondexch99.com/admin") {
 							console.log('LOGGEDIN_SUCCESSFULLY');

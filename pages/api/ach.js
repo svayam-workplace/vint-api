@@ -315,7 +315,6 @@ export default async function handler(req, res) {
 
 				if (!testflight) {
 					console.log('1_NEW_REQUEST_TYPE', type);
-					
 					const page = await launchBrowser();
 					var currentUrl = page.url();
 					console.log("currentUrl", currentUrl);
