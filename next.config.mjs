@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: false,
   env:{
     MAIN_URL : "https://api.sinc.network",
-    HEADLESS : false,
+    HEADLESS : true,
   }
 };
 
